@@ -27,13 +27,13 @@ public class BlobController {
 
 
 	public static final String ENDPOINT_FORMAT = "https://%s.blob.core.windows.net";
-	public static final String CONTAINER_PREFIX = "mycontainer";
 
 	@PostMapping(path="/read",consumes = "application/json", produces = "application/json")
 	public ResponseEntity<StreamingResponseBody> readFromBlob(@RequestBody ReadInput input) throws Exception {
 
 		try{
-			BlobContainerClient containerClient = getBlobContainerClient(input.getAccountName(), input.getAccountKey());
+			BlobContainerClient containerClient = getBlobContainerClient(input.getAccountName(),
+					input.getAccountKey(),input.getContainerName());
 			BlockBlobClient blobClient = containerClient.getBlobClient(input.getFileName()).getBlockBlobClient();
 			int dataSize = (int) blobClient.getProperties().getBlobSize();
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream(dataSize);
@@ -59,7 +59,9 @@ public class BlobController {
 	@PostMapping(path = "/write", consumes = "application/json", produces = "application/json")
 	public String writeToBlob(@RequestBody UploadInput input) {
 		try {
-			BlobContainerClient containerClient = getBlobContainerClient(input.getAccountName(), input.getAccountKey());
+			BlobContainerClient containerClient = getBlobContainerClient(input.getAccountName(),
+					input.getAccountKey(),input.getContainerName());
+			containerClient.create();
 			BlockBlobClient blobClient = containerClient.getBlobClient(input.getFileName()).getBlockBlobClient();
 			InputStream dataStream = new ByteArrayInputStream(input.getMessage().getBytes(StandardCharsets.UTF_8));
 			blobClient.upload(dataStream, input.getMessage().length());
@@ -76,12 +78,11 @@ public class BlobController {
 		return "Services up";
 	}
 
-	private BlobContainerClient getBlobContainerClient(String accountName, String accountKey) {
+	private BlobContainerClient getBlobContainerClient(String accountName, String accountKey,String containerName) {
 		StorageSharedKeyCredential credential = new StorageSharedKeyCredential(accountName, accountKey);
 		String endpoint = String.format(Locale.ROOT, ENDPOINT_FORMAT, accountName);
 		BlobServiceClient storageClient = new BlobServiceClientBuilder().endpoint(endpoint).credential(credential).buildClient();
-		BlobContainerClient containerClient = storageClient.getBlobContainerClient(CONTAINER_PREFIX + System.currentTimeMillis());
-		containerClient.create();
+		BlobContainerClient containerClient = storageClient.getBlobContainerClient(containerName);
 		return containerClient;
 	}
 

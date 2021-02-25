@@ -11,4 +11,5 @@ public class ReadInput {
     private String accountName;
     private String accountKey;
     private String fileName;
+    private String containerName;
 }

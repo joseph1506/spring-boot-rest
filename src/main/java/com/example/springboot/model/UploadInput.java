@@ -12,4 +12,5 @@ public class UploadInput {
     private String accountKey;
     private String fileName;
     private String message;
+    private String containerName;
 }
